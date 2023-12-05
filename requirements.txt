@@ -1,2 +1,8 @@
 pytube
 pydub
+openai-whisper
+azure-search-documents
+python-dotenv
+openai
+langchain
+rich
