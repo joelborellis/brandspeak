@@ -1,0 +1,13 @@
+[
+  {
+    "model": "gpt-4-1106-preview",
+    "api_key": "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"
+  },
+  {
+    "model": "gpt-4-32k-0613",
+    "api_key": "49911208ee4044dcb7aaa4f7192e5b74",
+    "base_url": "https://az-openai-east.openai.azure.com",
+    "api_type": "azure",
+    "api_version": "2023-06-01-preview"
+  }
+]

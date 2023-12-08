@@ -6,3 +6,4 @@ python-dotenv
 openai
 langchain
 rich
+pyautogen

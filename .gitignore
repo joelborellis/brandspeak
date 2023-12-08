@@ -1,4 +1,5 @@
 .venv
 notebooks/aws/
 notebooks/oracle/
+notebooks/microsoft/
 .env
