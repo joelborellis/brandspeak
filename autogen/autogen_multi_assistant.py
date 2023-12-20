@@ -151,7 +151,7 @@ if __name__ == '__main__':
         user_proxy.initiate_chat(
             manager,
             message="""
-            Write a detailed summary of Microsoft Ignite.  Include partnership announcements, product releases, technology advances and anything that was discussed in the keynote speeches.
+            Write a detailed LinkedIn post highlighting the announcments and key strategies announced by Microsoft and AWS at their recent conference keynotes.  At the end do a summary of the similarities and differences between the future approaches by both companies.
             """,
             silent=False
         )

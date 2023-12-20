@@ -4,3 +4,4 @@ notebooks/oracle/
 notebooks/microsoft/
 autogen/OAI_CONFIG_LIST
 .env
+REST.txt

@@ -63,5 +63,5 @@ class Search:
         print("Got result")
         for doc in r:
                 results.append(f"[SOURCEFILE:  {doc['sourcefile']}]" + doc['content'])
-        print("\n".join(results))
+        #print("\n".join(results))
         return ("\n".join(results))

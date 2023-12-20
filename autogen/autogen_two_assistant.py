@@ -64,6 +64,12 @@ if __name__ == '__main__':
             "assistant_id": planner_assistant.id,
         }
 
+        user_proxy = autogen.UserProxyAgent(
+            name="Admin",
+            system_message="A human admin. Interact with the planner to discuss the plan. Plan execution needs to be approved by this Admin.",
+            code_execution_config=False,
+        )
+
 
         # this is autogen stuff defining the agent that is going to be in the group
         linkedin_writer_agent = GPTAssistantAgent(
@@ -87,13 +93,6 @@ if __name__ == '__main__':
                 "aws_retrieval": aws_retrieval,
             }
         )
-
-        user_proxy = autogen.UserProxyAgent(
-            name="Admin",
-            system_message="A human admin. Interact with the planner to discuss the plan. Plan execution needs to be approved by this Admin.",
-            code_execution_config=False,
-        )
-
 
         groupchat = autogen.GroupChat(agents=[user_proxy, planner_agent, linkedin_writer_agent], messages=[], max_round=20)
         manager = autogen.GroupChatManager(groupchat=groupchat, name="brandspeak_manager")
