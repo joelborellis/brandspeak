@@ -14,6 +14,7 @@ openai.api_key = os.environ.get("OPENAI_API_KEY")
 client = OpenAI(api_key=openai.api_key)
 search_m: Search = Search()  # get instance of search to query corpus
 search_a: Search = Search()  # get instance of search to query corpus
+search_o: Search = Search()  # get instance of search to query corpus
 
 config_list_gpt4 = autogen.config_list_from_json(
     "OAI_CONFIG_LIST",
@@ -29,16 +30,22 @@ gpt4_config = {
     "timeout": 120,
 }
 
-# Function to perform a Shadow Search
+# Function to perform a Microsoft
 def microsoft_retrieval(query):
     print("calling Microsoft search")
     search_result = search_m.search_hybrid(query, "Microsoft")
     return search_result
 
-# Function to perform a Shadow Search
+# Function to perform a AWS
 def aws_retrieval(query):
     print("calling AWS search")
     search_result = search_a.search_hybrid(query, "AWS")
+    return search_result
+
+# Function to perform a Oracle
+def oracle_retrieval(query):
+    print("calling AWS search")
+    search_result = search_o.search_hybrid(query, "Oracle")
     return search_result
 
 if __name__ == '__main__':
@@ -52,6 +59,10 @@ if __name__ == '__main__':
         aws_retriever = client.beta.assistants.retrieve(
                         assistant_id="asst_ekigD4AX2R3ij6tqTIYvtiVa",
                         ) 
+        
+        oracle_retriever = client.beta.assistants.retrieve(
+                        assistant_id="asst_YBi5VOql08zBLzR3g7A4NnrN",
+                        )
         
         linkedin_writer = client.beta.assistants.retrieve(
                         assistant_id="asst_VxerQBWNNWuuRMqqa0V716aw",
@@ -83,6 +94,16 @@ if __name__ == '__main__':
                     ]
         }
 
+        oracle_retriever_config = {
+            "assistant_id": oracle_retriever.id,
+            "tools": [
+                {
+                    "type": "function",
+                    "function": oracle_retrieval,
+                }
+                    ]
+        }
+
         linkedin_writer_config = {
             "assistant_id": linkedin_writer.id,
         }
@@ -107,6 +128,13 @@ if __name__ == '__main__':
         )
 
         # this is autogen stuff defining the agent that is going to be in the group
+        oracle_retriever_agent = GPTAssistantAgent(
+            name="OracleRetriever",
+            instructions=None,
+            llm_config=oracle_retriever_config,
+        )
+
+        # this is autogen stuff defining the agent that is going to be in the group
         linkedin_writer_agent = GPTAssistantAgent(
             name="LinkedInWriter",
             instructions=None,
@@ -117,10 +145,10 @@ if __name__ == '__main__':
         planner_agent = GPTAssistantAgent(
             name="Planner",
             instructions="""You are a Planner.  Suggest a plan. Revise the plan based on feedback from Admin until Admin approval.
-                The plan may involve a MicrosoftRetriever who can retrieve documents related to Microsoft and a AWSRetriever who can retrieve documents related to AWS.
-                Only use these MicrosoftRetriever and AWSRetriever once to retrieve documents throughout to executiuon of the plan.
-                The plan may involve a LinkedInWriter who is an expert at writing LinkedIn posts based on the information provided by the MicrosoftRetriever and AWSRetriever.
-                Explain the plan first. Be clear which step is performed by a MicrosoftRetriever, and which step is performed by a AWSRetriever, anmd which step is performed by the LinkedInWriter.""",
+                The plan may involve a MicrosoftRetriever who can retrieve documents related to Microsoft and a AWSRetriever who can retrieve documents related to AWS, and an OracleRetriever who can retrieve documents related to Oracle.
+                Only use these MicrosoftRetriever, AWSRetriever and OracleRetriever once to retrieve documents throughout to execution of the plan.
+                The plan may involve a LinkedInWriter who is an expert at writing LinkedIn posts based on the information provided by the MicrosoftRetriever, AWSRetriever and OracleRetriever.
+                Explain the plan first. Be clear which step is performed by a MicrosoftRetriever, and which step is performed by a AWSRetriever, and which step is performed by a OracleRetriever, and which step is performed by the LinkedInWriter.""",
             llm_config=planner_assistant_config,
         )
 
@@ -136,6 +164,12 @@ if __name__ == '__main__':
             }
         )
 
+        oracle_retriever_agent.register_function(
+            function_map={
+                "oracle_retrieval": oracle_retrieval,
+            }
+        )
+
         user_proxy = autogen.UserProxyAgent(
             name="Admin",
             system_message="A human admin. Interact with the planner to discuss the plan. Plan execution needs to be approved by this Admin.",
@@ -143,7 +177,7 @@ if __name__ == '__main__':
         )
 
 
-        groupchat = autogen.GroupChat(agents=[user_proxy, microsoft_retriever_agent, aws_retriever_agent, planner_agent, linkedin_writer_agent], messages=[], max_round=20)
+        groupchat = autogen.GroupChat(agents=[user_proxy, microsoft_retriever_agent, aws_retriever_agent, oracle_retriever_agent,  planner_agent, linkedin_writer_agent], messages=[], max_round=20)
         manager = autogen.GroupChatManager(groupchat=groupchat, name="brandspeak_manager")
 
         print("initiating chat")
@@ -151,7 +185,7 @@ if __name__ == '__main__':
         user_proxy.initiate_chat(
             manager,
             message="""
-            Write a detailed LinkedIn post highlighting the announcments and key strategies announced by Microsoft and AWS at their recent conference keynotes.  At the end do a summary of the similarities and differences between the future approaches by both companies.
+            Write a LinkedIn article that discusses what AWS, Microsoft and Oracle are doing to enable enterprises to take advantage of AI solutions.  Use the information from recent keynote speeches at their annual conferences.
             """,
             silent=False
         )

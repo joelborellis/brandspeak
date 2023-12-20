@@ -58,7 +58,7 @@ class Search:
             vector_queries= [vector_query],
             vector_filter_mode=VectorFilterMode.PRE_FILTER,
             filter=f"category eq '{category}'",
-            select=["category", "sourcefile", "content"],
+            select=["sourcefile", "content"],
         )
         print("Got result")
         for doc in r:
