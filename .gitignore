@@ -4,5 +4,6 @@ notebooks/oracle/
 notebooks/microsoft/
 autogen/OAI_CONFIG_LIST
 autogen/.cache
+autogen/tools/__pycache__
 .env
 REST.txt
