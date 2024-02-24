@@ -2,7 +2,7 @@ import os
 import openai
 from openai import OpenAI
 from dotenv import load_dotenv
-import autogen
+from autogen import AssistantAgent, UserProxyAgent, GroupChat, GroupChatManager, config_list_from_json
 from autogen.agentchat.contrib.gpt_assistant_agent import GPTAssistantAgent
 from tools.searchtool import Search
 
@@ -16,7 +16,7 @@ search_m: Search = Search()  # get instance of search to query corpus
 search_a: Search = Search()  # get instance of search to query corpus
 search_o: Search = Search()  # get instance of search to query corpus
 
-config_list_gpt4 = autogen.config_list_from_json(
+config_list_gpt4 = config_list_from_json(
     "OAI_CONFIG_LIST",
     filter_dict={
         "model": ["gpt-4-1106-preview", "gpt-4-32k-0613"],
@@ -44,7 +44,7 @@ def aws_retrieval(query):
 
 # Function to perform a Oracle
 def oracle_retrieval(query):
-    print("calling AWS search")
+    print("calling Oracle search")
     search_result = search_o.search_hybrid(query, "Oracle")
     return search_result
 
@@ -75,6 +75,7 @@ if __name__ == '__main__':
         # define the config including the tools that the assistant has access to
         # this will be used by the GPTAssistant Agent that is Shadow Retriever
         microsoft_retriever_config = {
+            "config_list": config_list_gpt4,
             "assistant_id": microsoft_retriever.id,
             "tools": [
                 {
@@ -85,6 +86,7 @@ if __name__ == '__main__':
         }
 
         aws_retriever_config = {
+            "config_list": config_list_gpt4,
             "assistant_id": aws_retriever.id,
             "tools": [
                 {
@@ -95,6 +97,7 @@ if __name__ == '__main__':
         }
 
         oracle_retriever_config = {
+            "config_list": config_list_gpt4,
             "assistant_id": oracle_retriever.id,
             "tools": [
                 {
@@ -105,13 +108,23 @@ if __name__ == '__main__':
         }
 
         linkedin_writer_config = {
+            "config_list": config_list_gpt4,
             "assistant_id": linkedin_writer.id,
         }
 
         planner_assistant_config = {
+            "config_list": config_list_gpt4,
             "assistant_id": planner_assistant.id,
         }
 
+        user_proxy = UserProxyAgent(
+            name="Admin",
+            system_message="A human admin. Interact with the planner to discuss the plan. Plan execution needs to be approved by this Admin.",
+            code_execution_config=False,
+            max_consecutive_auto_reply=10,
+            human_input_mode="ALWAYS",
+            llm_config=gpt4_config,
+        )
 
         # this is autogen stuff defining the agent that is going to be in the group
         microsoft_retriever_agent = GPTAssistantAgent(
@@ -144,11 +157,7 @@ if __name__ == '__main__':
         # this is autogen stuff defining the agent that is going to be in the group
         planner_agent = GPTAssistantAgent(
             name="Planner",
-            instructions="""You are a Planner.  Suggest a plan. Revise the plan based on feedback from Admin until Admin approval.
-                The plan may involve a MicrosoftRetriever who can retrieve documents related to Microsoft and a AWSRetriever who can retrieve documents related to AWS, and an OracleRetriever who can retrieve documents related to Oracle.
-                Only use these MicrosoftRetriever, AWSRetriever and OracleRetriever once to retrieve documents throughout to execution of the plan.
-                The plan may involve a LinkedInWriter who is an expert at writing LinkedIn posts based on the information provided by the MicrosoftRetriever, AWSRetriever and OracleRetriever.
-                Explain the plan first. Be clear which step is performed by a MicrosoftRetriever, and which step is performed by a AWSRetriever, and which step is performed by a OracleRetriever, and which step is performed by the LinkedInWriter.""",
+            instructions=None,
             llm_config=planner_assistant_config,
         )
 
@@ -170,15 +179,8 @@ if __name__ == '__main__':
             }
         )
 
-        user_proxy = autogen.UserProxyAgent(
-            name="Admin",
-            system_message="A human admin. Interact with the planner to discuss the plan. Plan execution needs to be approved by this Admin.",
-            code_execution_config=False,
-        )
-
-
-        groupchat = autogen.GroupChat(agents=[user_proxy, microsoft_retriever_agent, aws_retriever_agent, oracle_retriever_agent,  planner_agent, linkedin_writer_agent], messages=[], max_round=20)
-        manager = autogen.GroupChatManager(groupchat=groupchat, name="brandspeak_manager")
+        groupchat = GroupChat(agents=[user_proxy, planner_agent, microsoft_retriever_agent, aws_retriever_agent, oracle_retriever_agent,  linkedin_writer_agent], messages=[], max_round=30)
+        manager = GroupChatManager(groupchat=groupchat, name="brandspeak_manager", llm_config=False)
 
         print("initiating chat")
 
