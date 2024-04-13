@@ -19,7 +19,7 @@ search_o: Search = Search()  # get instance of search to query corpus
 config_list_gpt4 = config_list_from_json(
     "OAI_CONFIG_LIST",
     filter_dict={
-        "model": ["gpt-4-1106-preview", "gpt-4-32k-0613"],
+        "model": "gpt-4-1106-preview",
     },
 )
 
@@ -64,9 +64,9 @@ if __name__ == '__main__':
                         assistant_id="asst_YBi5VOql08zBLzR3g7A4NnrN",
                         )
         
-        linkedin_writer = client.beta.assistants.retrieve(
-                        assistant_id="asst_VxerQBWNNWuuRMqqa0V716aw",
-                        )
+        #linkedin_writer = client.beta.assistants.retrieve(
+        #                assistant_id="asst_VxerQBWNNWuuRMqqa0V716aw",
+        #                )
         
         planner_assistant = client.beta.assistants.retrieve(
                         assistant_id="asst_HOeqxoPgbXdIzhepX8tvmekl",
@@ -107,10 +107,10 @@ if __name__ == '__main__':
                     ]
         }
 
-        linkedin_writer_config = {
-            "config_list": config_list_gpt4,
-            "assistant_id": linkedin_writer.id,
-        }
+        #linkedin_writer_config = {
+        #    "config_list": config_list_gpt4,
+        #    "assistant_id": linkedin_writer.id,
+        #}
 
         planner_assistant_config = {
             "config_list": config_list_gpt4,
@@ -120,9 +120,10 @@ if __name__ == '__main__':
         user_proxy = UserProxyAgent(
             name="Admin",
             system_message="A human admin. Interact with the planner to discuss the plan. Plan execution needs to be approved by this Admin.",
+            #You are the tech savvy conversation Initiator and Moderator.  Your role is to provide a platform for discussion
+            #Directive:  facilitate a smooth and engaging conversation between 
             code_execution_config=False,
             max_consecutive_auto_reply=10,
-            human_input_mode="ALWAYS",
             llm_config=gpt4_config,
         )
 
@@ -148,11 +149,11 @@ if __name__ == '__main__':
         )
 
         # this is autogen stuff defining the agent that is going to be in the group
-        linkedin_writer_agent = GPTAssistantAgent(
-            name="LinkedInWriter",
-            instructions=None,
-            llm_config=linkedin_writer_config,
-        )
+        #linkedin_writer_agent = GPTAssistantAgent(
+        #    name="LinkedInWriter",
+        #    instructions=None,
+        #    llm_config=linkedin_writer_config,
+        #)
 
         # this is autogen stuff defining the agent that is going to be in the group
         planner_agent = GPTAssistantAgent(
@@ -179,7 +180,8 @@ if __name__ == '__main__':
             }
         )
 
-        groupchat = GroupChat(agents=[user_proxy, planner_agent, microsoft_retriever_agent, aws_retriever_agent, oracle_retriever_agent,  linkedin_writer_agent], messages=[], max_round=30)
+        #groupchat = GroupChat(agents=[user_proxy, planner_agent, microsoft_retriever_agent, aws_retriever_agent, oracle_retriever_agent,  linkedin_writer_agent], messages=[], max_round=30)
+        groupchat = GroupChat(agents=[user_proxy, planner_agent, microsoft_retriever_agent, aws_retriever_agent, oracle_retriever_agent], messages=[], max_round=30)
         manager = GroupChatManager(groupchat=groupchat, name="brandspeak_manager", llm_config=False)
 
         print("initiating chat")
@@ -187,7 +189,7 @@ if __name__ == '__main__':
         user_proxy.initiate_chat(
             manager,
             message="""
-            Write a LinkedIn article that discusses what AWS, Microsoft and Oracle are doing to enable enterprises to take advantage of AI solutions.  Use the information from recent keynote speeches at their annual conferences.
+            Have a conversation about the different strategies Microsoft and Oracle have for AI.
             """,
             silent=False
         )
