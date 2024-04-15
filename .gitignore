@@ -1,7 +1,4 @@
 .venv
-notebooks/aws/
-notebooks/oracle/
-notebooks/microsoft/
 autogen/OAI_CONFIG_LIST
 autogen/.cache
 autogen/tools/__pycache__
